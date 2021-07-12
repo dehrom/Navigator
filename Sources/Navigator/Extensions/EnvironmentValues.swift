@@ -13,7 +13,7 @@ public extension EnvironmentValues {
         static var defaultValue: Navigator? { nil }
     }
 
-    public var navigator: Navigator? {
+    var navigator: Navigator? {
         get {
             self[NavigatorEnvironmentKey.self]
         } set {

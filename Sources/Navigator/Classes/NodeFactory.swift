@@ -8,8 +8,8 @@
 import Foundation
 import SwiftUI
 
-enum ModifierFactory {
-    static func produce(
+struct ModifierFactory {
+    func produce(
         with controller: NavigationNodeController,
         _ callback: @escaping () -> Void
     ) -> NavigationNodeModifier {

@@ -11,12 +11,12 @@ import SwiftUI
 public struct NavigationRootView<Content: View>: View {
     public init(@ViewBuilder content: () -> Content) {
         self.content = content()
-        rootNodeController = NavigationNodeController()
-        factory = ModifierFactory.self
+        rootNodeController = NavigationNodeController(with: NavigationIdentifier())
+        factory = ModifierFactory()
         navigator = Navigator(rootNodeController: rootNodeController, factory: factory)
     }
     
-    var body: some View {
+    public var body: some View {
         NavigationView {
             content
                 .environment(\.navigator, navigator)
@@ -32,5 +32,5 @@ public struct NavigationRootView<Content: View>: View {
     private let content: Content
     private let navigator: Navigator
     private let rootNodeController: NavigationNodeController
-    private let factory: ModifierFactory.Type
+    private let factory: ModifierFactory
 }

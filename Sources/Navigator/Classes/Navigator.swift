@@ -8,8 +8,10 @@
 import SwiftUI
 import Foundation
 
+public typealias NavigationIdentifier = UUID
+
 public final class Navigator {
-    public init(rootNodeController: NavigationNodeController, factory: ModifierFactory.Type) {
+    init(rootNodeController: NavigationNodeController, factory: ModifierFactory) {
         self.rootNodeController = rootNodeController
         self.stack = [rootNodeController]
         self.factory = factory
@@ -17,31 +19,31 @@ public final class Navigator {
     
     private var stack: [NavigationNodeController] = []
     private let rootNodeController: NavigationNodeController
-    private let factory: ModifierFactory.Type
+    private let factory: ModifierFactory
 }
 
 public extension Navigator {
     @discardableResult
-    func push<V: View>(_ view: V) -> Int {
+    func push<V: View>(_ view: V) -> NavigationIdentifier {
         let last = stack.last ?? rootNodeController
         let view = AnyView(view)
         let id = push(view, using: last)
         return id
     }
     
-    func pop(by index: Int?) {
+    func pop(by id: NavigationIdentifier?) {
         guard
-            let index = index,
-            stack.indices ~= index
+            let id = id,
+            let entry = stack[id]
         else { return }
         
-        guard index > stack.startIndex else {
+        guard entry.index > stack.startIndex else {
             popToRoot()
             return
         }
         
-        let previousIndex = index - 1
-        pop(by: previousIndex)
+        let previousIndex = entry.index - 1
+        pop(by: stack[previousIndex].id)
     }
     
     func popToRoot() {
@@ -52,26 +54,29 @@ public extension Navigator {
 }
 
 private extension Navigator {
-    func push(_ view: AnyView, using last: NavigationNodeController) -> Int {
+    func push(_ view: AnyView, using last: NavigationNodeController) -> NavigationIdentifier {
         let node = createNewNode(with: view)
         
         last.push(node.view)
         stack.append(node.controller)
         
-        return stack.endIndex - 1
+        return node.controller.id
     }
     
-    func pop(by index: Int) {
-        let controller = stack[index]
-        controller.pop()
-        
-        stack.removeSubrange(index..<stack.count)
+    func pop(by id: NavigationIdentifier) {
+        guard let entry = stack[id] else {
+            assertionFailure("There is always should be an entry at this point!")
+            return
+        }
+        entry.controller.pop()
+        stack.removeSubrange(entry.index..<stack.count)
     }
     
     func createNewNode(with view: AnyView) -> (view: AnyView, controller: NavigationNodeController) {
-        let controller = NavigationNodeController()
+        let controller = NavigationNodeController(with: NavigationIdentifier())
+        
         let modifier = factory.produce(with: controller) { [self] in
-            let index = stack.firstIndex(where: { $0 === controller }) ?? stack.endIndex
+            let index = stack[controller.id]?.index ?? stack.endIndex
             stack.remove(at: index)
         }
         
