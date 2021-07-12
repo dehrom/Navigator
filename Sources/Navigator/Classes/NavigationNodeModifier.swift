@@ -23,8 +23,6 @@ struct NavigationNodeModifier: ViewModifier {
                 ) {}
             )
             .onReceive(controller.$nextView.map { $0 != nil }) {
-//                print("next view", controller.nextView)
-//                print("selection", $0)
                 selection = Selection($0)
             }
             .onAppear(perform: onAppear)
