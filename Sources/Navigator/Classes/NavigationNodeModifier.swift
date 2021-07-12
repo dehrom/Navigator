@@ -10,26 +10,21 @@ import Foundation
 import SwiftUI
 
 struct NavigationNodeModifier: ViewModifier {
-    let controller: WeakBox<NavigationNodeController>
+    @ObservedObject var controller: NavigationNodeController
     let onAppear: () -> Void
     
     func body(content: Content) -> some View {
         content
             .overlay(
                 NavigationLink(
-                    destination: controller.wrappedValue?.nextView,
+                    destination: controller.nextView,
                     tag: Selection.active,
                     selection: $selection
                 ) {}
             )
-            .onReceive(
-                controller
-                    .wrappedValue
-                    .toPublisher()
-                    .flatMap(\.$nextView)
-                    .map { $0 != nil }
-                    .replaceNil(with: false)
-            ) {
+            .onReceive(controller.$nextView.map { $0 != nil }) {
+//                print("next view", controller.nextView)
+//                print("selection", $0)
                 selection = Selection($0)
             }
             .onAppear(perform: onAppear)

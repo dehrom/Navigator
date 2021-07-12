@@ -8,15 +8,13 @@
 import Foundation
 import SwiftUI
 
-struct ModifierFactory {
+final class ModifierFactory {
     func produce(
         with controller: NavigationNodeController,
         _ callback: @escaping () -> Void
     ) -> NavigationNodeModifier {
-        let weakBox = WeakBox(controller)
-        return NavigationNodeModifier(controller: weakBox) {
-            if weakBox.wrappedValue?.nextView != nil {
-                weakBox.nullify()
+        return NavigationNodeModifier(controller: controller) { [unowned controller] in
+            if controller.nextView != nil {
                 callback()
             }
         }

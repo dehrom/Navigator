@@ -24,10 +24,10 @@ public final class Navigator {
 
 public extension Navigator {
     @discardableResult
-    func push<V: View>(_ view: V) -> NavigationIdentifier {
+    func push<V: View>(_ view: V?) -> NavigationIdentifier? {
+        guard let view = view else { return nil }
         let last = stack.last ?? rootNodeController
-        let view = AnyView(view)
-        let id = push(view, using: last)
+        let id = push(AnyView(view), using: last)
         return id
     }
     
@@ -44,6 +44,22 @@ public extension Navigator {
         
         let previousIndex = entry.index - 1
         pop(by: stack[previousIndex].id)
+    }
+    
+    func popLast() {
+        guard
+            let last = stack.last,
+            let entry = stack.previousNode(for: last.id)
+        else { return }
+        
+        last.pop()
+        stack.remove(at: stack.endIndex - 1)
+        
+        entry.controller.pop()
+        
+        if stack.isEmpty {
+            stack = [rootNodeController]
+        }
     }
     
     func popToRoot() {
@@ -76,8 +92,10 @@ private extension Navigator {
         let controller = NavigationNodeController(with: NavigationIdentifier())
         
         let modifier = factory.produce(with: controller) { [self] in
-            let index = stack[controller.id]?.index ?? stack.endIndex
-            stack.remove(at: index)
+            let nextIndex = stack.nextNode(for: controller.id)?.index ?? stack.endIndex - 1
+            
+            controller.pop()
+            stack.remove(at: nextIndex)
         }
         
         let nextView = view
