@@ -12,6 +12,7 @@ let package = Package(
     products: [
         .library(
             name: "Navigator",
+            type: .dynamic,
             targets: ["Navigator"]),
     ],
     dependencies: [],
